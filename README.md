@@ -1,30 +1,40 @@
-# RickAndMorty API Task
+## Prerequisites 
+Installation packages:
+```shell
+pip install -r requirements.txt
+```
 
-### Installing
+## Run the Bank Application
 
-1 Install the required packages:
-    ```sh
-    pip install -r requirements.txt
-    ```
+```sh
+uvicorn main:app --reload
+```
 
-2. Run the FastAPI application:
-    ```sh
-    uvicorn main:app --reload
-    ```
+## API Endpoints
 
-    The application will be available at `http://127.0.0.1:8000`.
+Access http://127.0.0.1:8000 to hit endpoints
 
-## Usage
-
-Once the FastAPI application is running, you can visit the root URL to fetch, process, and view the filtered data from the RickAndMorty API.
-
-To view the filtered data in the browser, visit [http://127.0.0.1:8000](http://127.0.0.1:8000).
+### `POST /ProcessTransaction`
+Submit a new transaction and update account balance. 
+Required fields:
+- `Date`: (string) Transaction date
+- `Description`: (string) Transaction description
+- `Amount`: (float) Transaction amount, use negative for outgoing transactions
+- `Currency`: (string) Currency code (in our case - USD)
 
 
-The application will generate three JSON files in the project directory each containing the processed data from the RickAndMorty API.
+### `GET /GetTransactions`
+Retrieve the list of all provided transactions.
 
-- characters.json
-- locations.json
-- episodes.json
+it should look like this
 
-location of files app/utils/third_party/morti_api/json_output
+![Transaction Screenshot](tran_1.png)
+
+### `GET /RetrieveBalance`
+Retrieve the current account balance.
+
+### `GET /QueryTransactions`
+Fetch transactions within a specified date range. 
+Parameters:
+- `startDate`: (string) Start date of the range
+- `endDate`: (string) End date of the range
