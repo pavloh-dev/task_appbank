@@ -5,24 +5,24 @@ from models.models import BankTransactionModel
 
 class BankAccountService:
     def __init__(self, AccountType: str, CreditLimit: float = 0.0):
-        self.Transactions = []
-        self.Balance = 0.0
-        self.AccountType = AccountType
-        self.CreditLimit = CreditLimit
+        self.transactions = []
+        self.balance = 0.0
+        self.accountType = AccountType
+        self.creditLimit = CreditLimit
 
     async def ProcessTransaction(self, transaction: BankTransactionModel):
-        if transaction.Currency != "USD":
-            transaction.Amount /= 2
+        if transaction.currency != "USD":
+            transaction.amount /= 2
 
-        NewBalance = self.Balance + transaction.Amount
-        if self.AccountType == "Debit" and NewBalance < 0:
+        NewBalance = self.balance + transaction.amount
+        if self.accountType == "Debit" and NewBalance < 0:
             raise HTTPException(status_code=400, detail="Insufficient funds")
-        elif self.AccountType == "Credit" and NewBalance < -self.CreditLimit:
+        elif self.accountType == "Credit" and NewBalance < -self.creditLimit:
             raise HTTPException(status_code=400, detail="Credit limit exceeded")
 
-        self.Transactions.append(transaction.dict())
-        self.Balance = NewBalance
-        return {"Balance": self.Balance}
+        self.transactions.append(transaction)
+        self.balance = NewBalance
+        return {"Balance": self.balance}
 
 
 account = BankAccountService(AccountType="Debit")
