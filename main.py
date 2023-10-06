@@ -1,29 +1,23 @@
-import logging
-
-from fastapi import FastAPI, HTTPException, Depends
-
+from fastapi import FastAPI, HTTPException, Body
 from models.models import BankTransactionModel
 from utils.business_logic import BankAccountService
 from utils.datamodel import DataModel
 
-logging.basicConfig(level=logging.INFO)
+app = FastAPI(debug=True)
+bank_service = BankAccountService()
 
-import logging
 
-
-app = FastAPI()
-
-logger = logging.getLogger("app")
-
-bank_service = BankAccountService(AccountType="credit")
-DataModel.init_db()
+async def get_account(account_id: str):
+    account = await DataModel.get_account(account_id)
+    if account:
+        return account
+    raise HTTPException(status_code=404, detail="Account not found")
 
 
 @app.post("/CreateAccount")
-async def create_account(account_type: str, credit_limit: float = 0.0):
-    logger.info("HEY")
-    account_id = DataModel.create_account_db(account_type, credit_limit)
-    if account_id is None:
+async def create_account(account_type: str = Body(..., embed=True), credit_limit: float = Body(0.0, embed=True)):
+    account_id = await DataModel.create_account_db(account_type, credit_limit)
+    if not account_id:
         raise HTTPException(status_code=500, detail="Account creation failed.")
     return {"account_id": account_id}
 
@@ -31,23 +25,25 @@ async def create_account(account_type: str, credit_limit: float = 0.0):
 @app.post("/{account_id}/ProcessTransaction")
 async def process_transaction(
         transaction: BankTransactionModel,
-        account: DataModel = Depends(DataModel.get_account)
+        account_id,
 ):
-    return await bank_service.process_transaction(transaction, account)
+    account = await get_account(account_id)
+    await bank_service.process_transaction(transaction, account)
+    return await get_balance(account[0])
 
 
 @app.get("/{account_id}/GetBalance")
-async def get_balance(
-        account: DataModel = Depends(DataModel.get_account)
-):
-    return {"balance": DataModel.get_balance_from_db(account)}
+async def get_balance(account_id: str):
+    account = await get_account(account_id)
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found.")
+    return {"balance": await bank_service.get_current_balance(account[0])}
 
 
 @app.get("/{account_id}/GetTransactions")
-async def get_transactions(
-        account: DataModel = Depends(DataModel.get_account)
-):
-    transactions = DataModel.get_transactions_db(account)
-    if transactions is None:
-        raise HTTPException(status_code=404, detail="Account not found.")
+async def get_transactions(account_id):
+    account = await get_account(account_id)
+    transactions = await bank_service.get_transactions_list(account[0])
+    if not transactions:
+        raise HTTPException(status_code=404, detail="No transactions found.")
     return {"transactions": transactions}

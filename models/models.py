@@ -1,5 +1,4 @@
 import re
-from typing import List
 
 from pydantic import BaseModel, field_validator
 
@@ -46,20 +45,4 @@ class BankTransactionModel(BaseModel):
 
 
 class AccountModel(BaseModel):
-    transactions: List[BankTransactionModel] = []
-    balance: float = 0.0
-
-    @field_validator("transactions")
-    def check_balance(cls, transactions, values):
-        balance = values.get("balance", 0)
-        for transaction in transactions:
-            balance += transaction.Amount
-            if balance < 0:
-                raise ValueError("Insufficient funds for transaction")
-        return transactions
-
-    @field_validator("balance")
-    def validate_balance(cls, balance):
-        if balance < 0:
-            raise ValueError("Balance cannot be negative")
-        return balance
+    account_id: str
